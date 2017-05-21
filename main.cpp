@@ -20,10 +20,17 @@ int main()
 
     string orltrain = "/home/yjwudi/face_recognizer/orl/orltrain.txt";
     string orltest = "/home/yjwudi/face_recognizer/orl/orltest.txt";
+
+    //face recognization using eigenfaces(naive)
     run_model(orltrain, orltest);
+
+    //face recognization using eigenfaces(average)
     //run_model_ave(orltrain, orltest);
+
+    //face recognization using opencv eigenfaces(naive)
     //EGRec eg_model(orltrain, orltest);
     //eg_model.recognize();
+
 /*
     Eigenfaces ef_model(orltrain, orltest);
     ef_model.train();

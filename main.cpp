@@ -17,6 +17,33 @@ int main()
     string path2 = "/home/yjwudi/face_recognizer/pic_face_name.txt";
     string path3 = "/home/yjwudi/face_recognizer/train_sample.txt";
     string path4 = "/home/yjwudi/face_recognizer/test_sample.txt";
+
+    string orltrain = "/home/yjwudi/face_recognizer/orl/orltrain.txt";
+    string orltest = "/home/yjwudi/face_recognizer/orl/orltest.txt";
+    run_model(orltrain, orltest);
+    //run_model_ave(orltrain, orltest);
+    //EGRec eg_model(orltrain, orltest);
+    //eg_model.recognize();
+/*
+    Eigenfaces ef_model(orltrain, orltest);
+    ef_model.train();
+    ef_model.predict();
+*/
+    //EGRec eg_model(orltrain, orltest);
+    //eg_model.recognize_avg();
+    //LBPRec lbp_model(orltrain, orltest);
+    //lbp_model.recognize();
+
+/*
+    string pgm = "/home/yjwudi/face_recognizer/orl/s1/1.pgm";
+    Mat mat = imread(pgm);
+    cout << mat.channels() << endl;
+    cvtColor(mat, mat, CV_RGB2GRAY);
+    cout << mat.channels() << endl;
+    namedWindow("win");
+    imshow("win",mat);
+    waitKey();
+*/
     /*
      * detect faces
      *
@@ -47,7 +74,6 @@ int main()
 
     //face recognization using eigenfaces(average)
     //run_model_ave(path3, path4);
-
 
 
     return 0;
@@ -96,15 +122,16 @@ void run_model_ave(string trainf, string testf)
     in.close();
 
     //training
-    vector<Mat> kind_vec[5];
+    vector<Mat> kind_vec[45];
     for(i = 0; i < train_vec.size(); i++)
     {
+        Debug(i);
         QImage qimg(QString::fromStdString(train_vec[i]));
         Mat tmp_mat = model.prepareForRecognition(qimg);
         kind_vec[train_label[i]].push_back(tmp_mat);
         //kind_label[train_label[i]].push_back(train_label[i]);
     }
-    for(i = 1; i <= 2; i++)
+    for(i = 1; i <= 40; i++)
     {
         Mat tmp_mat = ave_mat(kind_vec[i]);
         train_mat.clear();
@@ -163,9 +190,9 @@ Mat ave_mat(vector<Mat> mat_vec)
         }
     }
     */
-    cout << average.at<double>(100,100) << endl;
-    average /=  3;
-    cout << average.at<double>(100,100) << endl;
+    //cout << average.at<double>(100,100) << endl;
+    average /=  mat_vec.size();
+    //cout << average.at<double>(100,100) << endl;
 
     return average;
 }
@@ -213,13 +240,18 @@ void run_model(string trainf, string testf)
     in.close();
 
     //training
+    cout << "training...\n";
     for(i = 0; i < train_vec.size(); i++)
-    {Debug(i);
-        QImage qimg(QString::fromStdString(train_vec[i]));
-        Mat tmp_mat = model.prepareForRecognition(qimg);
+    {
+        Debug(i);
+        //QImage qimg(QString::fromStdString(train_vec[i]));
+        //Mat tmp_mat = model.prepareForRecognition(qimg);
+        Mat tmp_mat = imread(train_vec[i], 0);
+        equalizeHist(tmp_mat,tmp_mat);
+        resize(tmp_mat, tmp_mat, Size(256, 256), (0, 0), (0, 0), INTER_LINEAR);
         train_mat.clear();
         label_vec.clear();
-        train_mat.push_back(tmp_mat);
+        train_mat.push_back(tmp_mat); 
         label_vec.push_back(train_label[i]);
         QString context;
         if(train_label[i]==1)
@@ -232,13 +264,18 @@ void run_model(string trainf, string testf)
         }
         model.train(train_mat, label_vec, context);
     }
+    QString context = "Robert";
+    //model.train(train_mat, label_vec, context);
 
     //testing
     int sum = 0;
     for(i = 0; i < test_vec.size(); i++)
     {
-        QImage qimg(QString::fromStdString(test_vec[i]));
-        Mat tmp_mat = model.prepareForRecognition(qimg);
+        //QImage qimg(QString::fromStdString(test_vec[i]));
+        //Mat tmp_mat = model.prepareForRecognition(qimg);
+        Mat tmp_mat = imread(test_vec[i], 0);
+        equalizeHist(tmp_mat,tmp_mat);
+        resize(tmp_mat, tmp_mat, Size(256, 256), (0, 0), (0, 0), INTER_LINEAR);
         int label = model.recognize(tmp_mat);
         cout << test_label[i] << endl;
         if(label == test_label[i])

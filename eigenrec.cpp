@@ -101,7 +101,7 @@ Mat EGRec::ave_mat(vector<Mat> mat_vec)
     {
         accumulate(mat_vec[i], average);
     }
-    average /=  3;
+    average /=  mat_vec.size();
 
     return average;
 }
@@ -112,7 +112,7 @@ void EGRec::recognize_avg()
     vector<int> label_vec;
     int i;
     cout << "reading train files\n";
-    vector<Mat> kind_vec[5];
+    vector<Mat> kind_vec[45];
     for(i = 0; i < train_vec.size(); i++)
     {
         string fname = train_vec[i];
@@ -126,7 +126,7 @@ void EGRec::recognize_avg()
         kind_vec[train_label[i]].push_back(img_gray);
     }
 
-    for(i = 1; i <= 2; i++)
+    for(i = 1; i <= 40; i++)
     {
         Mat tmp_mat = ave_mat(kind_vec[i]);
         train_pic.push_back(tmp_mat);

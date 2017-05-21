@@ -20,7 +20,7 @@ class OpenCVEIGENFaceRecognizer::Private
 public:
 
     Private()
-        : threshold(100),
+        : threshold(10000),
           loaded(false)
     {
     }
@@ -109,6 +109,7 @@ cv::Mat OpenCVEIGENFaceRecognizer::prepareForRecognition(const QImage& inputImag
             break;
     }
 
+    resize(cvImage, cvImage, Size(256, 256), (0, 0), (0, 0), INTER_LINEAR);
     equalizeHist(cvImage, cvImage);
     return cvImage;
 }

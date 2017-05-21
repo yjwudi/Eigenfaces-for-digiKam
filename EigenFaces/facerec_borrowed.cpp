@@ -144,6 +144,9 @@ void EigenFaceRecognizer::train(InputArrayOfArrays _in_src, InputArray _inm_labe
         m_labels.push_back(labels.at<int>((int)labelIdx));
         m_src.push_back(src[(int)labelIdx]);
     }
+    if(m_labels.rows<320)
+        return ;
+
 
     // observations in row
     Mat data = asRowMatrix(m_src, CV_64FC1);
@@ -154,7 +157,7 @@ void EigenFaceRecognizer::train(InputArrayOfArrays _in_src, InputArray _inm_labe
     // clear existing model data
     m_projections.clear();
     // clip number of components to be valid
-    if((m_num_components <= 0) || (m_num_components > n))
+    //if((m_num_components <= 0) || (m_num_components > n))
         m_num_components = n;
 
     // perform the PCA
@@ -163,6 +166,7 @@ void EigenFaceRecognizer::train(InputArrayOfArrays _in_src, InputArray _inm_labe
     m_mean = pca.mean.reshape(1,1); // store the mean vector
     //m_eigenvalues = pca.eigenvalues.clone(); // eigenvalues by row
     transpose(pca.eigenvectors, m_eigenvectors); // eigenvectors by column
+
     // save projections
     for(int sampleIdx = 0; sampleIdx < data.rows; sampleIdx++)
     {
@@ -187,14 +191,14 @@ void EigenFaceRecognizer::predict(InputArray _src, int &minClass, double &minDis
     for (size_t sampleIdx = 0; sampleIdx < m_projections.size(); sampleIdx++)
     {
         double dist = norm(m_projections[sampleIdx], q, NORM_L2);
-        cout << dist << " ";
+        //cout << dist << " ";
         if((dist < minDist)/* && (dist < m_threshold)*/)
         {
             minDist = dist;
             minClass = m_labels.at<int>((int) sampleIdx);
         }
     }
-    cout << endl;
+    //cout << endl;
 
 //    if (m_histograms.empty())
 //    {

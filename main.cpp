@@ -2,13 +2,16 @@
 #include "FDetect.h"
 #include "lbprec.h"
 #include "eigenrec.h"
+#include "fisherrec.h"
 #include "EigenFaces/eigen_faces.h"
 #include "EigenFaces/opencveigenfacerecognizer.h"
+#include "FisherFaces/opencvfisherfacerecognizer.h"
 
 using namespace FacesEngine;
 
 
 void run_model(string trainf, string testf);
+void run_fisher(string trainf, string testf);
 void run_model_ave(string trainf, string testf);
 Mat ave_mat(vector<Mat> mat_vec);
 int main()
@@ -21,8 +24,14 @@ int main()
     string orltrain = "/home/yjwudi/face_recognizer/orl/orltrain.txt";
     string orltest = "/home/yjwudi/face_recognizer/orl/orltest.txt";
 
+    //face recognization using opencv fisherfaces
+    //FisherRec fisher_model(orltrain, orltest);
+    //fisher_model.recognize();
+    run_fisher(orltrain, orltest);
+
+
     //face recognization using eigenfaces(naive)
-    run_model(orltrain, orltest);
+    //run_model(orltrain, orltest);
 
     //face recognization using eigenfaces(average)
     //run_model_ave(orltrain, orltest);
@@ -204,6 +213,97 @@ Mat ave_mat(vector<Mat> mat_vec)
     return average;
 }
 
+void run_fisher(string trainf, string testf)
+{
+    OpenCVFISHERFaceRecognizer model;
+    vector<string> train_vec, test_vec;
+    vector<int> train_label, test_label;
+    int i, j;
+    vector<Mat> train_mat;
+    vector<int> label_vec;
+
+    //reading input file
+    ifstream in;
+    in.open(trainf.c_str());
+    if(in.bad())
+    {
+        cout << "no such file: " << trainf << endl;
+        return ;
+    }
+    string fname;
+    int label;
+    cout << "reading " << trainf << endl;
+    while(in >> fname >> label)
+    {
+        train_vec.push_back(fname);
+        train_label.push_back(label);
+        //cout << fname << endl;
+    }
+    in.close();
+    in.open(testf.c_str());
+    if(in.bad())
+    {
+        cout << "no such file: " << testf << endl;
+        return ;
+    }
+    cout << "reading " << testf << endl;
+    while(in >> fname >> label)
+    {
+        test_vec.push_back(fname);
+        test_label.push_back(label);
+        //cout << fname << endl;
+    }
+    in.close();
+
+    //training
+    cout << "training...\n";
+    for(i = 0; i < train_vec.size(); i++)
+    {
+        Debug(i);
+        QImage qimg(QString::fromStdString(train_vec[i]));
+        Mat tmp_mat = model.prepareForRecognition(qimg);
+        //Mat tmp_mat = imread(train_vec[i], 0);
+        equalizeHist(tmp_mat,tmp_mat);
+        resize(tmp_mat, tmp_mat, Size(256, 256), (0, 0), (0, 0), INTER_LINEAR);
+        //train_mat.clear();
+        //label_vec.clear();
+        train_mat.push_back(tmp_mat);
+        label_vec.push_back(train_label[i]);
+        QString context;
+        if(train_label[i]==1)
+        {
+            context = "Jay";
+        }
+        else
+        {
+            context = "Robert";
+        }
+        //model.train(train_mat, label_vec, context);
+    }
+    QString context = "Robert";
+    model.train(train_mat, label_vec, context);
+
+    //testing
+    int sum = 0;
+    cout << "testing\n";
+    for(i = 0; i < test_vec.size(); i++)
+    {
+        Debug(i);
+        //QImage qimg(QString::fromStdString(test_vec[i]));
+        //Mat tmp_mat = model.prepareForRecognition(qimg);
+        Mat tmp_mat = imread(test_vec[i], 0);
+        equalizeHist(tmp_mat,tmp_mat);
+        resize(tmp_mat, tmp_mat, Size(256, 256), (0, 0), (0, 0), INTER_LINEAR);
+        int label = model.recognize(tmp_mat);
+        cout << test_label[i] << endl;
+        if(label == test_label[i])
+        {
+            sum++;
+        }
+    }
+    cout << sum << "/" << test_vec.size() << endl;
+}
+
 void run_model(string trainf, string testf)
 {
     OpenCVEIGENFaceRecognizer model;
@@ -251,9 +351,9 @@ void run_model(string trainf, string testf)
     for(i = 0; i < train_vec.size(); i++)
     {
         Debug(i);
-        //QImage qimg(QString::fromStdString(train_vec[i]));
-        //Mat tmp_mat = model.prepareForRecognition(qimg);
-        Mat tmp_mat = imread(train_vec[i], 0);
+        QImage qimg(QString::fromStdString(train_vec[i]));
+        Mat tmp_mat = model.prepareForRecognition(qimg);
+        //Mat tmp_mat = imread(train_vec[i], 0);
         equalizeHist(tmp_mat,tmp_mat);
         resize(tmp_mat, tmp_mat, Size(256, 256), (0, 0), (0, 0), INTER_LINEAR);
         train_mat.clear();
@@ -276,8 +376,10 @@ void run_model(string trainf, string testf)
 
     //testing
     int sum = 0;
+    cout << "testing\n";
     for(i = 0; i < test_vec.size(); i++)
     {
+        Debug(i);
         //QImage qimg(QString::fromStdString(test_vec[i]));
         //Mat tmp_mat = model.prepareForRecognition(qimg);
         Mat tmp_mat = imread(test_vec[i], 0);
